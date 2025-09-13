@@ -1,4 +1,6 @@
 import NextAuth from 'next-auth';
+import Google from 'next-auth/providers/google';
+import AzureAD from 'next-auth/providers/azure-ad';
 import { authConfig } from './auth.config';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
@@ -18,7 +20,7 @@ async function getUser(email: string): Promise<User | undefined> {
     }
 }
 
-export const { auth, signIn, signOut } = NextAuth({
+export const { handlers, auth, signIn, signOut } = NextAuth({
     ...authConfig,
     providers: [
         Credentials({
@@ -38,6 +40,23 @@ export const { auth, signIn, signOut } = NextAuth({
                 console.log('Invalid credentials');
                 return null;
             },
+        }),
+        Google({
+            clientId: process.env.AUTH_GOOGLE_ID,
+            clientSecret: process.env.AUTH_GOOGLE_SECRET,
+            authorization: {
+                params: {
+                    prompt: "consent",
+                    access_type: "offline",
+                    response_type: "code",
+                },
+            },
+        }),
+        AzureAD({
+            clientId: process.env.AUTH_AZURE_AD_CLIENT_ID,
+            clientSecret: process.env.AUTH_AZURE_AD_CLIENT_SECRET,
+            // You might need to specify the tenantId if you're not using the common endpoint
+            // tenantId: process.env.AUTH_AZURE_AD_TENANT_ID,
         }),
     ],
 });
